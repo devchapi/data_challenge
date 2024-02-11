@@ -7,7 +7,7 @@ class Employee(Base):
     __tablename__ = 'hired_employees'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(255))
     hire_date = Column(DateTime)
     department_id = Column(Integer)
     job_id = Column(Integer)

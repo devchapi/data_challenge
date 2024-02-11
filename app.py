@@ -1,34 +1,24 @@
 import os
 from flask import Flask, request, jsonify
-from src.utils.processing import rename_timestamp, upload_to_database
+from src.utils.processing import rename_timestamp, upload_to_database, execute_service
+from src.utils.constants import Constants
 
 app = Flask(__name__)
-
-#Function to validate the content of the data uploaded
-def csv_validate(data):
-    try:
-        for entry in data:
-            if not int(entry['val1']):
-                return False, "Invalid data format: field_1 not a integer"
-    except KeyError as e:
-        return False, f"Invalid data format"
-    return True, "CSV data format is valid"
 
 
 @app.route('/upload/csv', methods=['POST'])
 def upload_csv():
-    # Check if a file is present in the request
+    #check file
     if 'file' not in request.files:
         return jsonify({"error": "No file provided"}), 400
 
-    # Get the file from the request
     csv_file = request.files['file']
 
-    # Check if file is empty
+    #check content
     if csv_file.filename == '':
         return jsonify({"error": "Empty file provided"}), 400
 
-    # Check if file extension is CSV
+    #check format
     if not csv_file.filename.endswith('.csv'):
         return jsonify({"error": "Invalid file format: Expected CSV"}), 400
 
@@ -37,23 +27,29 @@ def upload_csv():
 
     filename = csv_file.filename
 
-    # Save the file to a temporary location
-    path = "data/input/"
+    #temporary location constant
+    path = Constants.uploaded_files_path 
     file_timestamp = rename_timestamp(filename)
     path_file =  f"{path}{file_timestamp}"
     csv_file.save(path_file)
 
-    # Determine the entity based on the filename
+    #get entity
     base_name = os.path.basename(filename)
     entity = base_name.split('.')[0]  
 
-    # Upload the file data to the database
+    #upload and migrate
     upload_to_database(path_file, entity)
 
-    # Delete the temporary file
-    #os.remove(filename)
-
     return jsonify({"message": "CSV file uploaded and processed successfully"}), 200
+
+
+@app.route('/employees_by_department_job', methods=['GET'])
+def employees_by_department_job():
+    query = Constants.query_quarters
+
+    data = execute_service(query)
+
+    return jsonify(data)
 
 
 if __name__ == '__main__':
