@@ -1,4 +1,6 @@
+import os
 from flask import Flask, request, jsonify
+from src.utils.processing import rename_timestamp, upload_to_database
 
 app = Flask(__name__)
 
@@ -15,43 +17,43 @@ def csv_validate(data):
 
 @app.route('/upload/csv', methods=['POST'])
 def upload_csv():
-    try:
-        #check for file provided
-        if 'file' not in request.files:
-            return jsonify({"error": "No file provided"}), 400
-        
-        csv_file = request.files['file']
-        
-        #check for content
-        if csv_file.filename == '':
-            return jsonify({"error": "Empty file provided"}), 400
-        
-        #check extension
-        if not csv_file.filename.endswith('.csv'):
-            return jsonify({"error": "Invalid file format: Expected CSV"}), 400
-        
-        #read content
-        csv_data = csv_file.read().decode('utf-8')
-        
-        #generate list of dictionaries
-        csv_rows = []
-        for row in csv_data.split('\n'):
-            if row.strip():
-                values = row.split(',')
-                row_dict = {}
-                for index, value in enumerate(values):
-                    row_dict[f'val{index+1}'] = value.strip()
-                csv_rows.append(row_dict)
-        
-        #validate format
-        is_valid, message = csv_validate(csv_rows)
-        if not is_valid:
-            return jsonify({"error": message}), 400
-        
-        return jsonify({"message": "CSV file uploaded successfully"}), 200
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # Check if a file is present in the request
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    # Get the file from the request
+    csv_file = request.files['file']
+
+    # Check if file is empty
+    if csv_file.filename == '':
+        return jsonify({"error": "Empty file provided"}), 400
+
+    # Check if file extension is CSV
+    if not csv_file.filename.endswith('.csv'):
+        return jsonify({"error": "Invalid file format: Expected CSV"}), 400
+
+    if not csv_file.filename in ['departments.csv', 'hired_employees.csv', 'jobs.csv']:
+        return jsonify({"error": "Invalid file format: Unexpected filename"}), 400
+
+    filename = csv_file.filename
+
+    # Save the file to a temporary location
+    path = "data/input/"
+    file_timestamp = rename_timestamp(filename)
+    path_file =  f"{path}{file_timestamp}"
+    csv_file.save(path_file)
+
+    # Determine the entity based on the filename
+    base_name = os.path.basename(filename)
+    entity = base_name.split('.')[0]  
+
+    # Upload the file data to the database
+    upload_to_database(path_file, entity)
+
+    # Delete the temporary file
+    #os.remove(filename)
+
+    return jsonify({"message": "CSV file uploaded and processed successfully"}), 200
 
 
 if __name__ == '__main__':
