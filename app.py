@@ -52,5 +52,14 @@ def employees_by_department_job():
     return jsonify(data)
 
 
+@app.route('/hired_over_mean', methods=['GET'])
+def departments_hiring_most():
+    query = Constants.query_quarters
+
+    data = execute_service(query)
+
+    return jsonify(data)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

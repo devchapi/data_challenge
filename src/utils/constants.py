@@ -14,5 +14,22 @@ class Constants:
         GROUP BY departments.department, jobs.job
         ORDER BY departments.department, jobs.job;
     """
-    
+    query_avg = """
+        SELECT AVG(employees_count) FROM (
+            SELECT COUNT(*) AS employees_count
+            FROM hired_employees
+            WHERE YEAR(hire_date) = 2021
+            GROUP BY department_id
+        ) AS department_avg
+    """
+    query_more_hired = """
+        SELECT departments.id, departments.department, COUNT(hired_employees.id) AS hired
+        FROM departments
+        INNER JOIN hired_employees ON departments.id = hired_employees.department_id
+        WHERE YEAR(hired_employees.hire_date) = 2021
+        GROUP BY departments.id, departments.department
+        HAVING hired > """
+    query_order_by = """ 
+        ORDER BY hired DESC
+    """
     

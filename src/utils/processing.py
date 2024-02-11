@@ -100,5 +100,5 @@ def execute_service(query):
         
         return employee_data
 
-    except IntegrityError as e:
+    except Exception as e:
         return f"Error executing service: {e}"
