@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify
-from src.utils.processing import rename_timestamp, upload_to_database, execute_service
+from src.utils.processing import rename_timestamp, upload_to_database, execute_employees_by_department_job_service, execute_hired_over_mean_service
 from src.utils.constants import Constants
 
 app = Flask(__name__)
@@ -47,16 +47,16 @@ def upload_csv():
 def employees_by_department_job():
     query = Constants.query_quarters
 
-    data = execute_service(query)
+    data = execute_employees_by_department_job_service(query)
 
     return jsonify(data)
 
 
 @app.route('/hired_over_mean', methods=['GET'])
 def departments_hiring_most():
-    query = Constants.query_quarters
+    query = Constants.query_more_hired
 
-    data = execute_service(query)
+    data = execute_hired_over_mean_service(query)
 
     return jsonify(data)
 

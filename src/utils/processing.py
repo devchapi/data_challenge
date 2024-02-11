@@ -80,7 +80,7 @@ def rename_timestamp(filename):
 
     return new_filename
 
-def execute_service(query):
+def execute_employees_by_department_job_service(query):
     with open('src/utils/config.json', 'r') as f:
         config = json.load(f)
     
@@ -102,3 +102,28 @@ def execute_service(query):
 
     except Exception as e:
         return f"Error executing service: {e}"
+
+def execute_hired_over_mean_service(query):
+    with open('src/utils/config.json', 'r') as f:
+        config = json.load(f)
+    
+    connection_cad = f"mysql+mysqldb://{config['mysql']['user']}:{config['mysql']['password']}@{config['mysql']['host']}/{config['mysql']['database']}"
+    
+    engine = create_engine(connection_cad)
+
+    try:
+        results = engine.execute(query)
+        
+        result_data = []
+        for row in results:
+            department_id = str(row[0])
+            department_name = row[1]
+            employees_hired = str(row[2])
+            result_data.append({'id': department_id, 'department': department_name, 'hired': employees_hired})
+        
+        return result_data
+
+    except Exception as e:
+        return f"Error executing service: {e}"
+
+
